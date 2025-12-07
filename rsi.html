@@ -1,0 +1,541 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>RSI Care — Guided Stretch Routine</title>
+  <style>
+    :root {
+      --bg: #0f172a;        /* slate-900 */
+      --card: #1e293b;      /* slate-800 */
+      --text: #e2e8f0;      /* slate-200 */
+      --muted: #94a3b8;     /* slate-400 */
+      --accent: #22c55e;    /* green-500 */
+      --accent-2: #38bdf8;  /* sky-400 */
+      --warn: #fbbf24;      /* amber-400 */
+      --danger: #f87171;    /* red-400 */
+      --border: #334155;    /* slate-700 */
+      --shadow: 0 12px 30px rgba(0,0,0,0.35);
+      --radius: 14px;
+    }
+    [data-theme="light"] {
+      --bg: #f8fafc;        /* slate-50 */
+      --card: #ffffff;
+      --text: #0f172a;      /* slate-900 */
+      --muted: #475569;     /* slate-600 */
+      --border: #e2e8f0;    /* slate-200 */
+      --shadow: 0 10px 24px rgba(15,23,42,0.08);
+    }
+    * { box-sizing: border-box }
+    html, body { height: 100% }
+    body {
+      margin: 0;
+      font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, "Inter", "Helvetica Neue", Arial;
+      background: var(--bg);
+      color: var(--text);
+      line-height: 1.5;
+    }
+    .app {
+      max-width: 980px;
+      margin: 32px auto;
+      padding: 0 20px;
+    }
+    header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      margin-bottom: 16px;
+    }
+    .brand {
+      display: flex; align-items: center; gap: 12px;
+    }
+    .badge {
+      padding: 6px 10px; border: 1px solid var(--border); border-radius: 999px;
+      color: var(--muted); font-size: 12px;
+    }
+    .controls {
+      display: flex; gap: 10px; flex-wrap: wrap;
+    }
+    button, select {
+      background: var(--card);
+      color: var(--text);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 10px 14px;
+      font-weight: 600;
+      cursor: pointer;
+      box-shadow: var(--shadow);
+    }
+    button:hover { border-color: var(--accent-2) }
+    button.primary { background: var(--accent-2); color: #062c43; border-color: transparent }
+    button.danger { background: var(--danger); color: #3c0a0a }
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(12, 1fr);
+      gap: 16px;
+    }
+    .col-8 { grid-column: span 8 }
+    .col-4 { grid-column: span 4 }
+    @media (max-width: 900px) {
+      .col-8, .col-4 { grid-column: 1 / -1 }
+    }
+    .card {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+      padding: 18px;
+    }
+    h1, h2, h3 { margin: 0 0 10px 0 }
+    p { margin: 8px 0 }
+    .exercise {
+      display: grid; gap: 10px;
+    }
+    .exercise-header {
+      display: flex; align-items: center; justify-content: space-between;
+    }
+    .tags { display: flex; gap: 6px; flex-wrap: wrap }
+    .tag { font-size: 12px; color: var(--muted); padding: 2px 8px; border: 1px dashed var(--border); border-radius: 999px }
+    .instruction { color: var(--muted) }
+    .timer {
+      display: flex; align-items: center; gap: 10px; flex-wrap: wrap;
+      padding-top: 6px;
+    }
+    .timer .display {
+      font-variant-numeric: tabular-nums;
+      font-size: 28px; font-weight: 700;
+      min-width: 120px;
+    }
+    .row { display: flex; align-items: center; gap: 8px; flex-wrap: wrap }
+    .muted { color: var(--muted) }
+    .divider { border-top: 1px solid var(--border); margin: 12px 0 }
+    .kbd {
+      background: #0b1220; color: #e2e8f0; border: 1px solid #1f2937;
+      border-radius: 6px; font-size: 12px; padding: 2px 6px;
+    }
+    .progress-bar {
+      height: 8px; background: #111827; border-radius: 999px;
+      overflow: hidden; border: 1px solid var(--border);
+    }
+    .progress {
+      height: 100%; width: 0%; background: var(--accent);
+      transition: width 0.3s ease;
+    }
+    .pill { padding: 6px 10px; border-radius: 999px; border: 1px solid var(--border); color: var(--muted) }
+    .footer { color: var(--muted); font-size: 13px }
+    .toggle { display: inline-flex; align-items: center; gap: 6px }
+  </style>
+</head>
+<body>
+  <div class="app" role="application" aria-label="RSI Care App">
+    <header>
+      <div class="brand">
+        <h1>RSI Care</h1>
+        <span class="badge">Guided routine</span>
+      </div>
+      <div class="controls" aria-label="Global controls">
+        <button id="startRoutine" class="primary" title="Start guided routine">Start routine</button>
+        <button id="prev" title="Previous exercise">⟵ Prev</button>
+        <button id="next" title="Next exercise">Next ⟶</button>
+        <button id="breakNow" class="pill" title="Start a 20s break">Break 20s</button>
+        <select id="breakCycle" title="Break cycle minutes">
+          <option value="20">Break every 20 min</option>
+          <option value="25" selected>Break every 25 min</option>
+          <option value="30">Break every 30 min</option>
+        </select>
+        <button id="themeToggle" class="pill" title="Toggle dark/light">Theme</button>
+        <label class="toggle pill" title="Reduce animations">
+          <input type="checkbox" id="reduceMotion" />
+          <span>Reduce motion</span>
+        </label>
+      </div>
+    </header>
+
+    <div class="grid">
+      <section class="card col-8" aria-labelledby="routineTitle">
+        <div class="exercise">
+          <div class="exercise-header">
+            <h2 id="routineTitle">Routine</h2>
+            <div class="tags">
+              <span class="tag">Hold timers</span>
+              <span class="tag">Reps</span>
+              <span class="tag">Progress</span>
+            </div>
+          </div>
+
+          <div class="progress-bar" aria-hidden="true"><div id="progress" class="progress"></div></div>
+
+          <div id="exerciseContainer"></div>
+        </div>
+      </section>
+
+      <aside class="card col-4" aria-labelledby="remindersTitle">
+        <h3 id="remindersTitle">Break reminder</h3>
+        <p class="muted">Take a 20‑second break every 20–30 minutes. Use the quick “Break 20s” button or auto‑cycle below.</p>
+        <div class="row">
+          <div id="breakDisplay" class="display" aria-live="polite">25:00</div>
+          <button id="breakStart" class="primary">Start cycle</button>
+          <button id="breakPause">Pause</button>
+          <button id="breakReset">Reset</button>
+        </div>
+        <div class="divider"></div>
+        <p class="footer">
+          Keyboard: <span class="kbd">Space</span> pause/resume, <span class="kbd">N</span> next, <span class="kbd">P</span> prev, <span class="kbd">B</span> break.
+        </p>
+      </aside>
+    </div>
+
+    <div class="divider"></div>
+    <p class="footer">
+      This routine provides general information and guidance. If anything causes pain or symptoms worsen, stop and consider speaking with a qualified health professional.
+    </p>
+  </div>
+
+  <script>
+    // --- Data ---
+    const defaultHold = 25; // seconds for stretches with hold ranges
+    const routine = [
+      {
+        id: "wrist-flexor-stretch",
+        name: "Wrist Flexor Stretch",
+        purpose: "Great for pain shooting up the forearm.",
+        cues: [
+          "Extend your arm straight in front, palm up.",
+          "With the other hand, gently pull fingers down toward the floor.",
+          "You should feel it along the inside of your forearm."
+        ],
+        type: "hold",
+        holdSeconds: 25, // 20–30 suggested
+        sets: 3
+      },
+      {
+        id: "wrist-extensor-stretch",
+        name: "Wrist Extensor Stretch",
+        purpose: "Good if the top of your forearm feels tight.",
+        cues: [
+          "Arm straight, palm down.",
+          "Use your other hand to gently pull fingers toward your body."
+        ],
+        type: "hold",
+        holdSeconds: 25,
+        sets: 3
+      },
+      {
+        id: "median-nerve-glide",
+        name: "Median Nerve Glide",
+        purpose: "Helps with that “twangy” electric feeling.",
+        cues: [
+          "Stand or sit tall.",
+          "Arm out to the side, palm forward.",
+          "Tilt head away while extending fingers; tilt toward while relaxing wrist.",
+          "Move slowly; mild nerve stretch, not pain."
+        ],
+        type: "reps",
+        reps: 12,
+        sets: 1
+      },
+      {
+        id: "scap-squeeze",
+        name: "Shoulder Blade Squeeze",
+        purpose: "If your shoulder rounds forward at the computer.",
+        cues: [
+          "Sit tall.",
+          "Gently squeeze shoulder blades together (down + back)."
+        ],
+        type: "hold-reps",
+        holdSeconds: 8, // 5–10 seconds
+        reps: 10,
+        sets: 1
+      },
+      {
+        id: "pec-doorway",
+        name: "Pec Doorway Stretch",
+        purpose: "Helps open the chest and reduce shoulder strain.",
+        cues: [
+          "Forearm on door frame, elbow at 90°.",
+          "Step forward slowly until you feel a stretch across the chest."
+        ],
+        type: "hold",
+        holdSeconds: 25,
+        sets: 1
+      },
+      {
+        id: "upper-trap-stretch",
+        name: "Upper Trap Stretch",
+        purpose: "For shooting pain into shoulder.",
+        cues: [
+          "Sit tall.",
+          "Tilt head to the left if the right shoulder hurts; keep right shoulder relaxed."
+        ],
+        type: "hold",
+        holdSeconds: 25,
+        sets: 1
+      }
+    ];
+
+    // --- State ---
+    const state = JSON.parse(localStorage.getItem("rsi-care-state") || "{}");
+    let currentIndex = state.currentIndex ?? 0;
+    let guided = false;
+    let holdTimer = null;
+    let holdRemaining = 0;
+    let breakTimer = null;
+    let breakRemaining = 0;
+    let cycleRunning = false;
+
+    // Preferences
+    const prefs = JSON.parse(localStorage.getItem("rsi-care-prefs") || "{}");
+    const preferredHold = prefs.defaultHold ?? defaultHold;
+    const preferredBreak = prefs.breakMinutes ?? 25;
+    const reducedMotion = prefs.reducedMotion ?? false;
+    const theme = prefs.theme ?? "light";
+
+    document.documentElement.setAttribute("data-theme", theme);
+
+    // --- Helpers ---
+    const $ = sel => document.querySelector(sel);
+    const fmt = s => {
+      const m = Math.floor(s / 60);
+      const sec = Math.floor(s % 60);
+      return `${String(m).padStart(2, "0")}:${String(sec).padStart(2, "0")}`;
+    };
+    const saveState = () => {
+      localStorage.setItem("rsi-care-state", JSON.stringify({ currentIndex }));
+    };
+    const savePrefs = () => {
+      localStorage.setItem("rsi-care-prefs", JSON.stringify({
+        defaultHold: preferredHold,
+        breakMinutes: Number($("#breakCycle").value),
+        reducedMotion: $("#reduceMotion").checked,
+        theme: document.documentElement.getAttribute("data-theme")
+      }));
+    };
+
+    // --- Render routine cards ---
+    function renderRoutine() {
+      const container = $("#exerciseContainer");
+      container.innerHTML = "";
+      routine.forEach((ex, idx) => {
+        const card = document.createElement("div");
+        card.className = "card";
+        card.setAttribute("role", "region");
+        card.setAttribute("aria-labelledby", `${ex.id}-title`);
+
+        const isActive = idx === currentIndex;
+
+        card.innerHTML = `
+          <div class="exercise-header">
+            <h3 id="${ex.id}-title">${idx + 1}. ${ex.name}</h3>
+            <span class="pill">${ex.purpose}</span>
+          </div>
+          <p class="instruction">${ex.cues.map(c => `• ${c}`).join("<br/>")}</p>
+
+          <div class="row muted">
+            ${ex.type === "hold" ? `<span><strong>Hold:</strong> ${ex.holdSeconds}s × ${ex.sets} sets</span>` : ""}
+            ${ex.type === "reps" ? `<span><strong>Reps:</strong> ${ex.reps} × ${ex.sets} set</span>` : ""}
+            ${ex.type === "hold-reps" ? `<span><strong>Hold:</strong> ${ex.holdSeconds}s × <strong>Reps:</strong> ${ex.reps}</span>` : ""}
+          </div>
+
+          <div class="timer">
+            <div class="display" id="${ex.id}-display">${ex.type.includes("hold") ? fmt(ex.holdSeconds) : ex.reps}</div>
+            ${ex.type.includes("hold") ? `
+              <button data-action="start-hold" data-id="${ex.id}">Start hold</button>
+              <button data-action="pause-hold" data-id="${ex.id}">Pause</button>
+              <button data-action="reset-hold" data-id="${ex.id}">Reset</button>
+            ` : ""}
+            ${ex.type.includes("reps") ? `
+              <button data-action="rep-dec" data-id="${ex.id}">− Rep</button>
+              <button data-action="rep-inc" data-id="${ex.id}">+ Rep</button>
+              <button data-action="rep-reset" data-id="${ex.id}">Reset</button>
+            ` : ""}
+            <button data-action="set-done" data-id="${ex.id}">Mark set done</button>
+          </div>
+        `;
+        if (isActive) card.style.outline = "2px solid var(--accent-2)";
+        container.appendChild(card);
+      });
+
+      updateProgress();
+    }
+
+    function updateProgress() {
+      const pct = ((currentIndex) / routine.length) * 100;
+      $("#progress").style.width = `${pct}%`;
+    }
+
+    // --- Timers & interactions ---
+    function startHold(exId) {
+      const ex = routine.find(e => e.id === exId);
+      const display = document.getElementById(`${exId}-display`);
+      holdRemaining = ex.holdSeconds;
+      clearInterval(holdTimer);
+      holdTimer = setInterval(() => {
+        holdRemaining--;
+        display.textContent = fmt(holdRemaining);
+        if (holdRemaining <= 0) {
+          clearInterval(holdTimer);
+          beep();
+        }
+      }, 1000);
+    }
+    function pauseHold() { clearInterval(holdTimer); }
+    function resetHold(exId) {
+      const ex = routine.find(e => e.id === exId);
+      clearInterval(holdTimer);
+      document.getElementById(`${exId}-display`).textContent = fmt(ex.holdSeconds);
+    }
+    function markSetDone(exId) {
+      const idx = routine.findIndex(e => e.id === exId);
+      if (guided && idx === currentIndex) nextExercise();
+    }
+    function nextExercise() {
+      currentIndex = Math.min(currentIndex + 1, routine.length);
+      saveState();
+      renderRoutine();
+    }
+    function prevExercise() {
+      currentIndex = Math.max(currentIndex - 1, 0);
+      saveState();
+      renderRoutine();
+    }
+    function adjustRep(exId, delta) {
+      const display = document.getElementById(`${exId}-display`);
+      let val = parseInt(display.textContent, 10);
+      val = Math.max(0, val + delta);
+      display.textContent = val;
+    }
+    function resetReps(exId) {
+      const ex = routine.find(e => e.id === exId);
+      document.getElementById(`${exId}-display`).textContent = ex.reps;
+    }
+    function beep() {
+      try {
+        const ctx = new (window.AudioContext || window.webkitAudioContext)();
+        const o = ctx.createOscillator();
+        const g = ctx.createGain();
+        o.type = "sine"; o.frequency.value = 880;
+        o.connect(g); g.connect(ctx.destination);
+        g.gain.setValueAtTime(0.0001, ctx.currentTime);
+        g.gain.exponentialRampToValueAtTime(0.2, ctx.currentTime + 0.02);
+        o.start();
+        o.stop(ctx.currentTime + 0.18);
+      } catch (_) {}
+    }
+
+    // Break cycle
+    $("#breakCycle").value = String(preferredBreak);
+    function renderBreakDisplay() {
+      $("#breakDisplay").textContent = fmt(breakRemaining);
+    }
+    function startBreakCycle() {
+      cycleRunning = true;
+      clearInterval(breakTimer);
+      breakRemaining = Number($("#breakCycle").value) * 60;
+      renderBreakDisplay();
+      breakTimer = setInterval(() => {
+        breakRemaining--;
+        renderBreakDisplay();
+        if (breakRemaining <= 0) {
+          clearInterval(breakTimer);
+          // 20-second break
+          let rest = 20;
+          $("#breakDisplay").textContent = "Break: 00:20";
+          const restTimer = setInterval(() => {
+            rest--;
+            $("#breakDisplay").textContent = `Break: ${fmt(rest)}`;
+            if (rest <= 0) {
+              clearInterval(restTimer);
+              beep();
+              startBreakCycle(); // restart cycle
+            }
+          }, 1000);
+        }
+      }, 1000);
+      savePrefs();
+    }
+    function pauseBreakCycle() { cycleRunning = false; clearInterval(breakTimer); }
+    function resetBreakCycle() {
+      pauseBreakCycle();
+      breakRemaining = Number($("#breakCycle").value) * 60;
+      renderBreakDisplay();
+    }
+    function manualBreak() {
+      pauseBreakCycle();
+      let rest = 20;
+      const tick = setInterval(() => {
+        $("#breakDisplay").textContent = `Break: ${fmt(rest)}`;
+        rest--;
+        if (rest < 0) {
+          clearInterval(tick);
+          resetBreakCycle();
+        }
+      }, 1000);
+    }
+
+    // --- Events ---
+    document.addEventListener("click", (e) => {
+      const btn = e.target.closest("button");
+      if (!btn) return;
+      const action = btn.dataset.action;
+      const id = btn.dataset.id;
+
+      if (action === "start-hold") startHold(id);
+      else if (action === "pause-hold") pauseHold();
+      else if (action === "reset-hold") resetHold(id);
+      else if (action === "rep-inc") adjustRep(id, +1);
+      else if (action === "rep-dec") adjustRep(id, -1);
+      else if (action === "rep-reset") resetReps(id);
+      else if (action === "set-done") markSetDone(id);
+    });
+
+    $("#startRoutine").addEventListener("click", () => {
+      guided = true;
+      currentIndex = 0;
+      renderRoutine();
+    });
+    $("#next").addEventListener("click", nextExercise);
+    $("#prev").addEventListener("click", prevExercise);
+
+    $("#breakStart").addEventListener("click", startBreakCycle);
+    $("#breakPause").addEventListener("click", pauseBreakCycle);
+    $("#breakReset").addEventListener("click", resetBreakCycle);
+    $("#breakNow").addEventListener("click", manualBreak);
+    $("#breakCycle").addEventListener("change", () => {
+      savePrefs();
+      resetBreakCycle();
+    });
+
+    $("#themeToggle").addEventListener("click", () => {
+      const cur = document.documentElement.getAttribute("data-theme");
+      const next = cur === "light" ? "dark" : "light";
+      document.documentElement.setAttribute("data-theme", next);
+      savePrefs();
+    });
+    $("#reduceMotion").checked = reducedMotion;
+    $("#reduceMotion").addEventListener("change", () => {
+      document.body.style.scrollBehavior = $("#reduceMotion").checked ? "auto" : "smooth";
+      savePrefs();
+    });
+
+    // Keyboard shortcuts
+    document.addEventListener("keydown", (e) => {
+      if (e.target.tagName === "INPUT" || e.target.tagName === "SELECT" || e.target.isContentEditable) return;
+      if (e.code === "Space") {
+        e.preventDefault();
+        // Toggle current hold if applicable
+        const ex = routine[currentIndex] || {};
+        if (ex.type.includes && ex.type.includes("hold")) {
+          if (holdTimer) pauseHold(); else startHold(ex.id);
+        }
+      } else if (e.key.toLowerCase() === "n") nextExercise();
+      else if (e.key.toLowerCase() === "p") prevExercise();
+      else if (e.key.toLowerCase() === "b") manualBreak();
+    });
+
+    // Initial render
+    renderRoutine();
+    resetBreakCycle();
+  </script>
+</body>
+</html>
